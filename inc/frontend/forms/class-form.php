@@ -7,15 +7,13 @@ class Form {
   protected $plugin_name;
   protected $version;
   protected $plugin_text_domain;
-  protected $form;
-  protected $form_name;
-  protected $list_table;
   protected $fields;
 
-  public function __construct($plugin_name, $version, $plugin_text_domain) {
+  public function __construct($plugin_name, $version, $plugin_text_domain, $form) {
     $this->plugin_name = $plugin_name;
     $this->version = $version;
     $this->plugin_text_domain = $plugin_text_domain;
+    $this->form = $form;
   }
 
   /**
@@ -23,8 +21,8 @@ class Form {
 	 */
   public function enqueue_styles() {
     wp_enqueue_style(
-      $this->plugin_name . '-' . $this->form,
-      plugin_dir_url( __FILE__ ) . str_replace('_', '-', $this->form) . '/assets/css/index.css',
+      $this->plugin_name . '-' . $this->form->dir(),
+      plugin_dir_url( __FILE__ ) . str_replace('_', '-', $this->form->dir()) . '/assets/css/index.css',
       array(),
       $this->version,
       'all'
@@ -36,8 +34,8 @@ class Form {
 	 */
   public function enqueue_scripts() {
     wp_enqueue_script(
-      $this->plugin_name . '-' . $this->form,
-      plugin_dir_url( __FILE__ ) . str_replace('_', '-', $this->form) . '/assets/build/index.js',
+      $this->plugin_name . '-' . $this->form->dir(),
+      plugin_dir_url( __FILE__ ) . str_replace('_', '-', $this->form->dir()) . '/assets/build/index.js',
       array( 'jquery' ),
       $this->version,
       false
@@ -49,7 +47,7 @@ class Form {
    * Form view is called in the child, for relative reasons
 	 */
   public function display_form() {
-    $this->form_view();
+    $this->form->view();
   }
 
   /**
@@ -66,6 +64,13 @@ class Form {
     $response = $this->send_mail();
 
     echo json_encode($response);
+  }
+
+  /**
+	 * Sets the form fields from post to the state
+  */
+  private function set_form_fields() {
+    $this->fields = $this->form->parse_fields($_POST);
   }
 
   /**
@@ -143,11 +148,11 @@ class Form {
 	 */
   private function send_mail() {
     $to = get_option('admin_email');
-    $subject = "A new project planner enquiry";
+    $subject = $this->form->mail_subject();
     $email = 'noreply@bonafidedesignco.com';
     $headers = array('Content-Type: text/html; charset=UTF-8', 'From: Bona Fide Design Co <'. $email , '>');
-    $message = $this->render_mail_html();
 
+    $message = $this->form->render_mail_html($this->fields);
     $sent = wp_mail($to, $subject, $message, $headers);
 
     return $this->handle_mail_response($sent);
@@ -158,16 +163,10 @@ class Form {
 	 */
   private function handle_mail_response($response) {
     if(!$response) {
-      return array(
-        'status' => 'failure',
-        'message' => 'There was an error sending your form, please check your email address and try again.'
-      );
+      return $this->form->mail_fail_response();
     }
 
-    return array(
-      'status' => 'success',
-      'message' => '<svg width="100" class="is-animated swing" viewBox="0 0 32 40"><use xlink:href="#happy-face" href="#happy-face"></use></svg><br>Thank you for submitting your form, we will be in touch very shortly!'
-    );
+    return $this->form->mail_success_response();
   }
 
   /**
@@ -176,7 +175,7 @@ class Form {
 	public function save_to_db() {
 		global $wpdb;
 
-		$table_name = $wpdb->prefix . 'mp_forms_' . $this->form;
+		$table_name = $wpdb->prefix . 'mp_forms_' . $this->form->db_name();
 		$wpdb->insert($table_name, $this->fields);
 	}
 }

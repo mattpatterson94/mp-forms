@@ -2,6 +2,8 @@
 
 namespace MpForms\Inc\Frontend;
 
+use MpForms\Inc\Frontend\Forms;
+
 /**
  * The public-facing functionality of the plugin.
  *
@@ -68,7 +70,7 @@ class Frontend {
 
 		foreach($forms as $form) {
 			$new_class = "MpForms\\Inc\\Frontend\\Forms\\$form\\$form";
-			$this->forms[$form] = new $new_class($this->plugin_name, $this->version, $this->plugin_text_domain);
+			$this->forms[$form] = new Forms\Form($this->plugin_name, $this->version, $this->plugin_text_domain, new $new_class());
 		}
 	}
 
