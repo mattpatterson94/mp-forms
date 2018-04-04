@@ -2,6 +2,8 @@
 
 namespace MpForms\Inc\Admin;
 
+use MpForms\Inc\Admin\Forms;
+
 /**
  * The admin-specific functionality of the plugin.
  *
@@ -69,7 +71,7 @@ class Admin {
 
 		foreach($forms as $form) {
 			$new_class = "MpForms\\Inc\\Admin\\Forms\\$form\\$form";
-			array_push($this->forms, new $new_class($this->plugin_name, $this->version, $this->plugin_text_domain));
+			array_push($this->forms, new Forms\Form($this->plugin_name, $this->version, $this->plugin_text_domain, new $new_class()));
 		}
 	}
 
