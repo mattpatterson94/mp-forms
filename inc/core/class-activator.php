@@ -2,6 +2,7 @@
 
 namespace MpForms\Inc\Core;
 
+use MpForms\Inc\Admin\Forms;
 use MpForms as NS;
 
 /**
@@ -44,7 +45,7 @@ class Activator {
 
     foreach($plugin_forms as $form) {
       $new_class = "MpForms\\Inc\\Admin\\Forms\\$form\\Db";
-      $new_form = new $new_class();
+      $new_form = new Forms\Db(new $new_class());
       $new_form->create_database();
     }
 	}
